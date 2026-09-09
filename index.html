@@ -248,8 +248,7 @@
       return forbidden;
     }
 
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
+    function updateResult() {
       const forbidden = findForbiddenCharacters(input.value);
       result.hidden = false;
 
@@ -262,7 +261,14 @@
       result.className = 'result ng';
       const list = forbidden.map((character) => `<li><code>${escapeHtml(character)}</code></li>`).join('');
       result.innerHTML = `<p class="result-title">✕ 使用できない文字が含まれています</p><p>以下の文字を取り除いてください：</p><ul class="bad-list" aria-label="使用できない文字">${list}</ul>`;
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      updateResult();
     });
+
+    input.addEventListener('input', updateResult);
 
     function escapeHtml(value) {
       return value.replace(/[&<>'"]/g, (character) => ({
