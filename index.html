@@ -191,7 +191,7 @@
   <main>
     <p class="eyebrow">CHARACTER CHECK</p>
     <h1>使用できる文字を確認</h1>
-    <p class="lead">応募フォームに入力する文字列をチェックします。絵文字、外字、制御文字などの使用できない文字を見つけて表示します。</p>
+    <p class="lead">日本語IMEで入力・変換しやすい文字を受け付けます。日本語、英数字、ギリシア文字、一般的な記号など以外の文字体系に加え、絵文字や外字も見つけて表示します。</p>
 
     <section class="panel" aria-labelledby="check-label">
       <form id="check-form">
@@ -200,7 +200,7 @@
           <input id="text-input" name="text" type="text" autocomplete="off" placeholder="文字列を入力してください" aria-describedby="input-help" required>
           <button type="submit">判定する</button>
         </div>
-        <span id="input-help" class="sr-only">入力された文字を1文字ずつ判定します</span>
+        <span id="input-help" class="sr-only">入力された文字を1文字ずつ判定します。ギリシア文字や発音記号付き文字は使用できます</span>
       </form>
       <div id="result" class="result" role="status" aria-live="polite" hidden></div>
     </section>
@@ -213,17 +213,27 @@
 
     const privateUsePattern = /[\uE000-\uF8FF\u{F0000}-\u{FFFFD}\u{100000}-\u{10FFFD}]/u;
     const pictographicPattern = /\p{Extended_Pictographic}/u;
+    const widelySupportedSymbolPattern = /[©®™♀♂]/u;
+    const forbiddenSymbolPattern = /[⌘]/u;
     const emojiComponentPattern = /[\u{1F3FB}-\u{1F3FF}\u{1F1E6}-\u{1F1FF}]/u;
     const controlPattern = /\p{Cc}/u;
-    const joinerPattern = /[\u200C\u200D\uFE0E\uFE0F\u20E3]/u;
+    const joinerPattern = /[\u200C\u200D\u20E3]/u;
+    const letterOrMarkPattern = /[\p{Letter}\p{Mark}]/u;
+    const japaneseImeScriptPattern = /[\p{Script=Latin}\p{Script=Greek}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Common}\p{Script=Inherited}]/u;
 
     function isForbiddenCluster(cluster) {
-      if (privateUsePattern.test(cluster) || pictographicPattern.test(cluster) || emojiComponentPattern.test(cluster)) {
+      if (privateUsePattern.test(cluster) || emojiComponentPattern.test(cluster) || forbiddenSymbolPattern.test(cluster)) {
         return true;
       }
 
       for (const character of cluster) {
+        if (pictographicPattern.test(character) && !widelySupportedSymbolPattern.test(character)) {
+          return true;
+        }
         if (controlPattern.test(character) && character !== '\n' && character !== '\r' && character !== '\t') {
+          return true;
+        }
+        if (letterOrMarkPattern.test(character) && !japaneseImeScriptPattern.test(character)) {
           return true;
         }
       }
